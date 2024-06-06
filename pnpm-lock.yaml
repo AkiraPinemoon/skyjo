@@ -40,6 +40,9 @@ devDependencies:
   '@types/uuid':
     specifier: ^9.0.8
     version: 9.0.8
+  '@xpd/tailwind-3dtransforms':
+    specifier: ^1.0.3
+    version: 1.0.3
 
 packages:
 
@@ -2506,6 +2509,10 @@ packages:
       - '@vue/composition-api'
       - vue
     dev: false
+
+  /@xpd/tailwind-3dtransforms@1.0.3:
+    resolution: {integrity: sha512-LEKfNj57djZAucQ1itu/zinRkYnkhzNjAMhz8DkbguTyBcTDHF1R6CuXO536BFE/YGyHDCYd7tDF5ghSrViUgQ==}
+    dev: true
 
   /abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}

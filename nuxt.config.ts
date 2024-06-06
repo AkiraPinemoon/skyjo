@@ -8,9 +8,9 @@ export default defineNuxtConfig({
 
   nitro: {
     experimental: {
-      websocket: true
+      websocket: true,
     },
   },
 
-  modules: ["@nuxtjs/tailwindcss"]
-})
+  modules: ["@nuxtjs/tailwindcss"],
+});

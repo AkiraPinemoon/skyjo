@@ -1,6 +1,6 @@
 import type { NitroApp } from "nitropack";
 import { Server as Engine } from "engine.io";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import { defineEventHandler } from "h3";
 import { game } from "@/server/dbModels/index";
 
@@ -43,6 +43,13 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
 
     socket.data.gameId = null;
 
+    // register logging middleware
+    socket.use(([event, ...args], next) => {
+      console.log("SocketIo event " + event + " from " + socket.id);
+
+      next();
+    });
+
     // disconnection handler
     socket.on("disconnect", async () => {
       console.log("SocketIo disconnection from " + socket.id);
@@ -53,23 +60,30 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       if (!theGame) return;
       if (theGame.owner?.socketId == socket.id.toString()) {
         if (theGame.players.length > 0) {
-          theGame.owner = theGame.players.pop();
-          socket.broadcast.in(theGame._id.toString()).emit("player_left", theGame.players);
-          socket.broadcast.in(theGame._id.toString()).emit("new_owner", theGame.owner);
+          theGame.owner = await theGame.players.pop();
           await theGame.save();
+          socket.broadcast
+            .in(theGame._id.toString())
+            .emit("player_left", theGame.players);
+          socket.broadcast
+            .in(theGame._id.toString())
+            .emit("new_owner", theGame.owner);
         } else {
           await theGame.deleteOne();
         }
       } else {
-        await theGame.players.pull({ socketId: socket.id });
-        socket.broadcast.in(theGame._id.toString()).emit("player_left", theGame.players);
+        theGame.players.pull({ socketId: socket.id });
         await theGame.save();
+        const updatedGame = await game.findById(theGame._id);
+        if (!updatedGame) return;
+        socket.broadcast
+          .in(theGame._id.toString())
+          .emit("player_left", updatedGame.players);
       }
     });
 
     // host game handler
     socket.on("host_game", async () => {
-      console.log("SocketIo message host_game from " + socket.id);
       if (socket.data.gameId) return;
       let newGame = await game.create({
         owner: {
@@ -89,7 +103,6 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
 
     // join game handler
     socket.on("join_game", async (gameId: string) => {
-      console.log("SocketIo message join_game from " + socket.id);
       if (socket.data.gameId) return;
       let theGame = await game.findById(gameId);
       if (!theGame) return;
