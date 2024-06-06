@@ -1,42 +1,32 @@
 <template>
-    <div>
-      <p>Status: {{ isConnected ? "connected" : "disconnected" }}</p>
-      <p>Transport: {{ transport }}</p>
+    <div class="p-4">
+        <div>
+            <p>{{ game?.owner.username }}</p>
+        </div>
+        <div v-for="player of game?.players">
+            <p>{{ player.username }}</p>
+        </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { io } from 'socket.io-client';
 
-const socket = io()
+const game = useGame();
+const socket = useSocket();
 
-const isConnected = ref(false);
-const transport = ref("N/A");
+socket.value?.on("player_joined", (players) => {
+    if (!game.value) return;
+    game.value.players = players;
+});
 
-if (socket.connected) {
-  onConnect();
-}
+socket.value?.on("player_left", (players) => {
+    if (!game.value) return;
+    game.value.players = players;
+});
 
-function onConnect() {
-  isConnected.value = true;
-  transport.value = socket.io.engine.transport.name;
-
-  socket.io.engine.on("upgrade", (rawTransport) => {
-    transport.value = rawTransport.name;
-  });
-}
-
-function onDisconnect() {
-  isConnected.value = false;
-  transport.value = "N/A";
-}
-
-socket.on("connect", onConnect);
-socket.on("disconnect", onDisconnect);
-
-onBeforeUnmount(() => {
-  socket.off("connect", onConnect);
-  socket.off("disconnect", onDisconnect);
+socket.value?.on("new_owner", (owner) => {
+    if (!game.value) return;
+    game.value.owner = owner;
 });
 
 </script>
