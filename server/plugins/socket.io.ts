@@ -264,8 +264,11 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           // return early is it isn't the player's turn
           if (theGame.data.currentPlayerId != socket.id) return;
 
+          // return early if selected card is already visible
+          if (theGame.data.playfields[socket.id][column][row].isVisible) return;
+
           theGame.data.playfields[socket.id][column][row].isVisible = true;
-          theGame.data.currentPlayer = getNextPlayerId(theGame);
+          theGame.data.currentPlayerId = getNextPlayerId(theGame);
           theGame.markModified("data");
           await theGame.save();
           
