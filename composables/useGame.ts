@@ -10,8 +10,12 @@ export default function () {
         socketId: string;
       }
     ];
-    state: string;
-    data: Object;
+    phase: string;
+    data?: {
+      lastcard: number;
+      currentPlayerId: string;
+      playfields: Object;
+    };
     id: string;
   } | null>("game", () => null);
 }

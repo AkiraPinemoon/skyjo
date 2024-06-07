@@ -9,14 +9,14 @@
         </button>
 
         <div class="flex flex-wrap gap-2 p-4">
-            <GameCard v-for="value in [...Array(15).keys()].map((x) => x - 2)" :card-value="value" :facing-up="facing" @click="facing = !facing" />
+            <GameCard v-for="value in [...Array(15).keys()].map((x) => x - 2)" :card-value="value" :facing-up="facing[value + 2]" @click="facing[value + 2] = !facing[value + 2]" />
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
 
-const facing = ref(false)
+const facing = ref([...Array(15).keys()].map((x) => false))
 
 async function clean() {
     await fetch("/api/admin/clean");

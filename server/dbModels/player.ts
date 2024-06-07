@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 const shema = new mongoose.Schema(
   {
-    username: String,
-    socketId: String,
+    username: { type: String, required: true },
+    socketId: { type: String, required: true },
   },
   {
     _id: false,

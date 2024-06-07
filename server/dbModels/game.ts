@@ -3,9 +3,9 @@ import { shema as playerShema } from "./player";
 
 const shema = new mongoose.Schema(
   {
-    owner: playerShema,
-    players: [playerShema],
-    state: { type: String, default: "SETUP" },
+    owner: { type: playerShema, required: true },
+    players: { type: [playerShema], required: true },
+    phase: { type: String, default: "SETUP", required: true },
     data: { type: Object, default: {} },
   },
   {

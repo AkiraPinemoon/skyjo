@@ -4,6 +4,6 @@ export default function () {
   return useState<Socket & {
     auth: {
       username: string,
-    }
+    },
   } | null>("socket", () => null);
 }
