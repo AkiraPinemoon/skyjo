@@ -37,8 +37,16 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       if (!socket.data.gameId) return;
 
       // find game
-      const theGame = await game.findById(socket.data.gameId);
+      let theGame = await game.findById(socket.data.gameId);
       if (!theGame) return;
+
+      // advance currentPlayerId if it's the players turn
+      if (theGame.phase == "INITIALREVEAL") {
+        if (theGame.data.currentPlayerId == socket.id) {
+          theGame.data.currentPlayerId = getNextPlayerId(theGame);
+          theGame.markModified("data");
+        }
+      }
 
       // run if the player owns the game
       if (theGame.owner?.socketId == socket.id.toString()) {
@@ -49,14 +57,14 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
             username: string;
             socketId: string;
           };
-          await theGame.save();
+          // await theGame.save();
 
-          socket.broadcast
-            .in(theGame._id.toString())
-            .emit("player_left", theGame.players);
-          socket.broadcast
-            .in(theGame._id.toString())
-            .emit("new_owner", theGame.owner);
+          // socket.broadcast
+          //   .in(theGame._id.toString())
+          //   .emit("player_left", theGame.players);
+          // socket.broadcast
+          //   .in(theGame._id.toString())
+          //   .emit("new_owner", theGame.owner);
         } else {
           // delete game if there are no other players
           await theGame.deleteOne();
@@ -64,15 +72,29 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       } else {
         // if player doesn't own game remove from players
         theGame.players.pull({ socketId: socket.id });
-        await theGame.save();
-        const updatedGame = await game.findById(theGame._id);
-        if (!updatedGame) return;
+        // await theGame.save();
+        // const updatedGame = await game.findById(theGame._id);
+        // if (!updatedGame) return;
 
         // inform room of changes
-        socket.broadcast
-          .in(theGame._id.toString())
-          .emit("player_left", updatedGame.players);
+        // socket.broadcast
+        //   .in(theGame._id.toString())
+        //   .emit("player_left", updatedGame.players);
       }
+
+      await theGame.save();
+      theGame = await game.findById(socket.data.gameId);
+      if (!theGame) return;
+
+      // notify room
+      socket.broadcast.in(theGame._id.toString()).emit("patch", {
+        players: theGame.players,
+        owner: theGame.owner,
+        data: {
+          currentPlayerId: theGame.data.currentPlayerId,
+          playfields: objectMap(theGame.data.playfields, maskPlayfield),
+        },
+      });
     });
 
     // host game handler
@@ -131,7 +153,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       });
 
       // inform room of new player
-      socket.broadcast.in(gameId).emit("player_joined", theGame.players);
+      socket.broadcast.in(gameId).emit("patch", { players: theGame.players });
 
       // store gameId in socket
       socket.data.gameId = gameId;
@@ -244,7 +266,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       };
 
       // notify room
-      io.in(theGame._id.toString()).emit("game_started", {
+      io.in(theGame._id.toString()).emit("patch", {
         phase: theGame.phase,
         data: publicData,
       });
@@ -271,7 +293,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           theGame.data.currentPlayerId = getNextPlayerId(theGame);
           theGame.markModified("data");
           await theGame.save();
-          
+
           // construct public data
           const publicData = {
             currentPlayerId: theGame.data.currentPlayerId,
@@ -279,7 +301,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           };
 
           // notify room
-          io.in(theGame._id.toString()).emit("card_revealed", {
+          io.in(theGame._id.toString()).emit("patch", {
             data: publicData,
           });
           break;

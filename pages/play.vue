@@ -38,26 +38,7 @@
 const game = useGame();
 const socket = useSocket();
 
-socket.value?.on("player_joined", (players) => {
-    if (!game.value) return;
-    game.value.players = players;
-});
-
-socket.value?.on("player_left", (players) => {
-    if (!game.value) return;
-    game.value.players = players;
-});
-
-socket.value?.on("new_owner", (owner) => {
-    if (!game.value) return;
-    game.value.owner = owner;
-});
-
-socket.value?.on("game_started", (patch) => {
-    game.value = { ...game.value, ...patch }
-});
-
-socket.value?.on("card_revealed", (patch) => {
+socket.value?.on("patch", (patch) => {
     game.value = { ...game.value, ...patch }
 });
 
