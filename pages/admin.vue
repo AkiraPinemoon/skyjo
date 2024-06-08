@@ -12,8 +12,6 @@
 
 <script lang="ts" setup>
 
-const facing = ref([...Array(15).keys()].map((x) => false))
-
 async function clean() {
     await fetch("/api/admin/clean");
 }

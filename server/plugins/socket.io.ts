@@ -297,7 +297,12 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           // check if initial reveal is done
           let isDone = true;
 
-          for (const player of theGame.players.concat(theGame.owner)) {
+          for (const player of (
+            theGame.players as {
+              username: string;
+              socketId: string;
+            }[]
+          ).concat(theGame.owner)) {
             const visibleAmount = (
               theGame.data.playfields[player.socketId] as [
                 [{ value: number; isVisible: boolean }]
@@ -326,8 +331,8 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
               data: publicData,
               phase: "MAIN",
             });
-            
-            return;
+
+            break;
           }
 
           // construct public data
@@ -341,7 +346,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
             data: publicData,
           });
           break;
-
+        
         default:
           break;
       }
