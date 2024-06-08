@@ -294,6 +294,42 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           theGame.markModified("data");
           await theGame.save();
 
+          // check if initial reveal is done
+          let isDone = true;
+
+          for (const player of theGame.players.concat(theGame.owner)) {
+            const visibleAmount = (
+              theGame.data.playfields[player.socketId] as [
+                [{ value: number; isVisible: boolean }]
+              ]
+            )
+              .flat()
+              .map((slot) => slot.isVisible)
+              .filter(Boolean).length;
+
+            if (visibleAmount != 2) {
+              isDone = false;
+              break;
+            }
+          }
+
+          // change phase if reveal is done
+          if (isDone) {
+            // construct public data
+            const publicData = {
+              currentPlayerId: theGame.data.currentPlayerId,
+              playfields: objectMap(theGame.data.playfields, maskPlayfield),
+            };
+
+            // notify room
+            io.in(theGame._id.toString()).emit("patch", {
+              data: publicData,
+              phase: "MAIN",
+            });
+            
+            return;
+          }
+
           // construct public data
           const publicData = {
             currentPlayerId: theGame.data.currentPlayerId,

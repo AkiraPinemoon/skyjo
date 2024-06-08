@@ -7,10 +7,6 @@
             class="uppercase text-xs flex place-items-center place-content-center border-4 border-slate-900 shadow shadow-slate-800 bg-slate-950 rounded-full px-6 py-2 transition-all hover:scale-105">Clear
             DB
         </button>
-
-        <div class="flex flex-wrap gap-2 p-4">
-            <GameCard v-for="value in [...Array(15).keys()].map((x) => x - 2)" :card-value="value" :facing-up="facing[value + 2]" @click="facing[value + 2] = !facing[value + 2]" />
-        </div>
     </div>
 </template>
 

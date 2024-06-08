@@ -13,7 +13,7 @@
     "@nuxtjs/tailwindcss": "^6.12.0",
     "axios": "^1.7.2",
     "engine.io": "^6.5.4",
-    "mongoose": "^8.4.0",
+    "mongoose": "^8.4.1",
     "nuxt": "^3.11.2",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
@@ -22,7 +22,9 @@
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
+    "@nuxt/ui": "^2.16.0",
     "@types/uuid": "^9.0.8",
-    "@xpd/tailwind-3dtransforms": "^1.0.3"
+    "@xpd/tailwind-3dtransforms": "^1.0.3",
+    "nuxt-icon-tw": "^0.1.4"
   }
 }
