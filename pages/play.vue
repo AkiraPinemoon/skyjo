@@ -2,8 +2,8 @@
     <div class="p-4 flex flex-col place-items-center justify-center">
         <PhaseIndicator class="w-2/3 max-w-4xl" />
 
-        <div v-if="game?.phase == 'SETUP'" class="p-4 flex flex-col place-items-center justify-center">
-            <div class="h-[30vh] w-1/2 flex flex-col gap-2 p-2 border border-slate-800 rounded-lg">
+        <div v-if="game?.phase == 'SETUP'" class="p-4 flex flex-col place-items-center justify-center w-2/3  max-w-xl">
+            <div class="min-h-96 w-full flex flex-col gap-2 p-2 border border-slate-800 rounded-lg">
                 <div class="border border-slate-800 rounded-full h-16 w-full flex place-items-center gap-4 pr-5">
                     <img src="https://www.svgrepo.com/show/532363/user-alt-1.svg"
                         class="h-full border border-slate-800 bg-white rounded-full" />
