@@ -3,7 +3,7 @@ import { Server as Engine } from "engine.io";
 import { Server } from "socket.io";
 import { defineEventHandler } from "h3";
 import { game } from "@/server/dbModels/index";
-import { getNextPlayerId, maskPlayfield, objectMap } from "@/server/util";
+import { getNextPlayerId, maskPlayfield, objectMap, revealPlayfield } from "@/server/util";
 
 export default defineNitroPlugin((nitroApp: NitroApp) => {
   const engine = new Engine();
@@ -362,6 +362,16 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         theGame.markModified("data");
 
         // TODO: check if column can be cleared
+        theGame.data.playfields[socket.id] = theGame.data.playfields[
+          socket.id
+        ].filter((column: { value: number; isVisible: boolean }[]) => {
+          const val = column[0].value;
+          if (column[1].value != val) return true;
+          if (column[2].value != val) return true;
+          theGame.data.lastcard = null;
+          theGame.markModified("data");
+          return false;
+        });
 
         // advance currentPlayerId
         theGame.data.currentPlayerId = getNextPlayerId(theGame);
@@ -380,6 +390,8 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         if (hiddenCount == 0) {
           // change phase
           theGame.phase = "END";
+          theGame.data.playfields = objectMap(theGame.data.playfields, revealPlayfield)
+          theGame.markModified("data");
 
           await theGame.save();
 
@@ -429,6 +441,16 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         theGame.markModified("data");
 
         // TODO: check if column can be cleared
+        theGame.data.playfields[socket.id] = theGame.data.playfields[
+          socket.id
+        ].filter((column: { value: number; isVisible: boolean }[]) => {
+          const val = column[0].value;
+          if (column[1].value != val) return true;
+          if (column[2].value != val) return true;
+          theGame.data.lastcard = null;
+          theGame.markModified("data");
+          return false;
+        });
 
         // advance currentPlayerId
         theGame.data.currentPlayerId = getNextPlayerId(theGame);
@@ -447,6 +469,8 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         if (hiddenCount == 0) {
           // change phase
           theGame.phase = "END";
+          theGame.data.playfields = objectMap(theGame.data.playfields, revealPlayfield)
+          theGame.markModified("data");
 
           await theGame.save();
 

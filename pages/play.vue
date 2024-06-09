@@ -41,16 +41,6 @@
                 <GameCard :card-value="game?.data?.currentCard != null ? game?.data?.currentCard : undefined" :facing-up="true" />
             </div>
         </div>
-
-        <div>
-            <UButton label="Open Debug" @click="debug = true" />
-
-            <USlideover v-model="debug">
-                <div class="p-4 flex-1">
-                    {{ game }}
-                </div>
-            </USlideover>
-        </div>
     </div>
 </template>
 
@@ -69,13 +59,6 @@ socket.value?.on("patch", (patch) => {
         },
     }
 });
-
-// debugging stuff
-const debug = ref(false);
-const lastevent = ref<{ event: string, args: any[] }>({ event: "N/A", args: [] });
-socket.value?.prependAny((event: string, ...args: any[]) => {
-    lastevent.value = { event, args };
-})
 
 // runs when player clicks one of his playfield cards
 function selectCard(column: number, row: number) {

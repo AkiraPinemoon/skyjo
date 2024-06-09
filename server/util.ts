@@ -13,6 +13,19 @@ export function maskPlayfield(
   });
 }
 
+export function revealPlayfield(
+  playfield: { value: number; isVisible: boolean }[][]
+): { value: number | null; isVisible: boolean }[][] {
+  return playfield.map((column) => {
+    return column.map((slot) => {
+      return {
+        value: slot.value,
+        isVisible: true,
+      };
+    });
+  });
+}
+
 export function objectMap(o: Object, fn: Function): Object {
   Object.keys(o).forEach((key) => {
     o[key as keyof typeof o] = fn(o[key as keyof typeof o]);
