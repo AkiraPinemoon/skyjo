@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    mongoUrl: "mongodb://admin:admin@localhost:27017",
+    mongoUrl: "mongodb://admin:admin@db:27017",
   },
 
   nitro: {
