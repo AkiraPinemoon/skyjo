@@ -1,5 +1,5 @@
 <template>
-  <div class="font-mono font-bold bg-slate-900 text-white flex flex-col w-screen h-screen">
+  <div class="font-mono font-bold bg-slate-900 text-white flex flex-col min-w-screen min-h-screen">
     <header class="border border-slate-800 h-20 relative">
       <div class="absolute w-full h-full uppercase flex place-items-center justify-center text-xl">Skyjo online</div>
       <NuxtLink to="/" class="absolute left-0 text-6xl font-normal px-2 h-full flex place-items-center">🃍</NuxtLink>

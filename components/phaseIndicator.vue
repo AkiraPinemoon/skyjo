@@ -1,5 +1,5 @@
 <template>
-    <UProgress :value="phaseId" :max="['SETUP', 'INITIALREVEAL', 'DRAW', 'DECIDE', 'REVEAL', 'END']" />
+    <UProgress :value="phaseId" :max="['SETUP', 'INITIALREVEAL', 'DRAW', 'DECIDE', 'REPLACE', 'REVEAL', 'END']" />
 </template>
 
 <script lang="ts" setup>
@@ -17,10 +17,12 @@ const phaseId = computed(() => {
             return 2;
         case "DECIDE":
             return 3;
-        case "REVEAL":
+        case "REPLACE":
             return 4;
-        case "END":
+        case "REVEAL":
             return 5;
+        case "END":
+            return 6;
         default:
             return -1;
     }

@@ -7,18 +7,3 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=admin
     ports:
       - 27017:27017
-    healthcheck:
-      test: ["CMD","mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
-  server:
-    build: .
-    restart: unless-stopped
-    ports:
-      - 3000:3000
-    depends_on:
-      db:
-        condition: service_healthy

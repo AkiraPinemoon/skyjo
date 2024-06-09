@@ -2,7 +2,7 @@ import type { NitroApp } from "nitropack";
 import mongoose from "mongoose";
 
 export default defineNitroPlugin(async (nitroApp: NitroApp) => {
-  const mongoUrl = process.env.MONGO_URL || "mongodb://admin:admin@db:27017";
+  const mongoUrl = process.env.MONGO_URL || "mongodb://admin:admin@localhost:27017";
 
   console.log("connecting to", mongoUrl);
   try {

@@ -350,8 +350,8 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           data: publicData,
         });
       }
-      // handle DECIDE phase
-      else if (theGame.phase == "DECIDE") {
+      // handle DECIDE phase and REPLACE phase
+      else if (theGame.phase == "DECIDE" || theGame.phase == "REPLACE") {
         // replace card
         theGame.data.lastcard =
           theGame.data.playfields[socket.id][column][row].value;
@@ -361,7 +361,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         theGame.data.currentCard = null;
         theGame.markModified("data");
 
-        // TODO: check if column can be cleared
+        // check if column can be cleared
         theGame.data.playfields[socket.id] = theGame.data.playfields[
           socket.id
         ].filter((column: { value: number; isVisible: boolean }[]) => {
@@ -571,7 +571,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         theGame.markModified("data");
 
         // change phase
-        theGame.phase = "DECIDE";
+        theGame.phase = "REPLACE";
 
         await theGame.save();
 

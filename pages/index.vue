@@ -26,11 +26,11 @@
     <p class="p-3 w-2/3 max-w-3xl text-justify">
       Skyjo online was programmed by Akira Pinemoon and is open source.
       Click below to see the code on Github.
-      
     </p>
     <div class="h-4"></div>
     <a target="_blank" rel="noopener noreferrer" href="https://github.com/AkiraPinemoon/skyjo"
-        class="uppercase text-xs flex place-items-center place-content-center border-4 border-slate-900 shadow shadow-slate-800 bg-slate-950 rounded-full px-6 py-2 transition-all hover:scale-105">
-        See Github repository</a>
+      class="uppercase text-xs flex place-items-center place-content-center border-4 border-slate-900 shadow shadow-slate-800 bg-slate-950 rounded-full px-6 py-2 transition-all hover:scale-105">
+      See Github repository
+    </a>
   </div>
 </template>

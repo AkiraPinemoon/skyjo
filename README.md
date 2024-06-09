@@ -10,11 +10,20 @@ Make sure to install the dependencies:
 pnpm install
 ```
 
-## Development Server
+### Development Server
 
-Start the development server on `http://localhost:3000`:
+Running the following commands will start a development server on `http://localhost:3000`:
 
 ```bash
+# starts developmend database
 docker compose up -d
+
+# starts nuxt development server
 pnpm run dev
 ```
+
+### Production Server
+
+To deploy Skyjo you can download a prebuilt image from github or user the dockerfile to build your own.
+Make sure to set the MONGO_URL environment variable to the connection string of your database.
+For the database you can either host your own MongoDB instance or use MongoDB's free tier which should be more than enough for this project.
