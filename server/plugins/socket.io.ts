@@ -57,29 +57,14 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
             username: string;
             socketId: string;
           };
-          // await theGame.save();
-
-          // socket.broadcast
-          //   .in(theGame._id.toString())
-          //   .emit("player_left", theGame.players);
-          // socket.broadcast
-          //   .in(theGame._id.toString())
-          //   .emit("new_owner", theGame.owner);
         } else {
           // delete game if there are no other players
           await theGame.deleteOne();
+          return;
         }
       } else {
         // if player doesn't own game remove from players
         theGame.players.pull({ socketId: socket.id });
-        // await theGame.save();
-        // const updatedGame = await game.findById(theGame._id);
-        // if (!updatedGame) return;
-
-        // inform room of changes
-        // socket.broadcast
-        //   .in(theGame._id.toString())
-        //   .emit("player_left", updatedGame.players);
       }
 
       await theGame.save();
