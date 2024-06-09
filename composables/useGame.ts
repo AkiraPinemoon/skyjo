@@ -12,6 +12,7 @@ export default function () {
     data: {
       lastcard: number | null;
       currentPlayerId: string;
+      currentCard: number | null;
       playfields: Object;
     } | null;
     id: string;

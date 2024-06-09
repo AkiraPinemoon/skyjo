@@ -6,7 +6,7 @@
                 class="uppercase text-md flex place-items-center place-content-center border-4 border-slate-900 shadow shadow-slate-800 bg-lime-600 rounded-full px-6 py-2 transition-all hover:scale-105">Disconnect</button>
         </div>
         <div v-else class="w-64 h-34 p-4 flex flex-col gap-3 place-content-center border border-slate-800 rounded">
-            <input placeholder="Username" v-model="username" class="rounded p-1 text-black px-2" />
+            <input placeholder="Username" v-model="username" class="rounded p-1 text-black px-2 bg-white" />
             <button @click="auth"
                 class="uppercase text-md flex place-items-center place-content-center border-4 border-slate-900 shadow shadow-slate-800 bg-lime-600 rounded-full px-6 py-2 transition-all hover:scale-105">Authenticate</button>
         </div>

@@ -281,59 +281,48 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       let theGame = await game.findById(socket.data.gameId);
       if (!theGame) return;
 
-      switch (theGame.phase) {
-        case "INITIALREVEAL":
-          // return early is it isn't the player's turn
-          if (theGame.data.currentPlayerId != socket.id) return;
+      // return early is it isn't the player's turn
+      if (theGame.data.currentPlayerId != socket.id) return;
 
-          // return early if selected card is already visible
-          if (theGame.data.playfields[socket.id][column][row].isVisible) return;
+      // handle INITIALREVEAL phase
+      if (theGame.phase == "INITIALREVEAL") {
+        // return early if selected card is already visible
+        if (theGame.data.playfields[socket.id][column][row].isVisible) return;
 
-          theGame.data.playfields[socket.id][column][row].isVisible = true;
-          theGame.data.currentPlayerId = getNextPlayerId(theGame);
-          theGame.markModified("data");
-          await theGame.save();
+        theGame.data.playfields[socket.id][column][row].isVisible = true;
+        theGame.data.currentPlayerId = getNextPlayerId(theGame);
+        theGame.markModified("data");
+        await theGame.save();
 
-          // check if initial reveal is done
-          let isDone = true;
+        // check if initial reveal is done
+        let isDone = true;
 
-          for (const player of (
-            theGame.players as {
-              username: string;
-              socketId: string;
-            }[]
-          ).concat(theGame.owner)) {
-            const visibleAmount = (
-              theGame.data.playfields[player.socketId] as [
-                [{ value: number; isVisible: boolean }]
-              ]
-            )
-              .flat()
-              .map((slot) => slot.isVisible)
-              .filter(Boolean).length;
+        for (const player of (
+          theGame.players as {
+            username: string;
+            socketId: string;
+          }[]
+        ).concat(theGame.owner)) {
+          const visibleAmount = (
+            theGame.data.playfields[player.socketId] as [
+              [{ value: number; isVisible: boolean }]
+            ]
+          )
+            .flat()
+            .map((slot) => slot.isVisible)
+            .filter(Boolean).length;
 
-            if (visibleAmount != 2) {
-              isDone = false;
-              break;
-            }
-          }
-
-          // change phase if reveal is done
-          if (isDone) {
-            // construct public data
-            const publicData = {
-              currentPlayerId: theGame.data.currentPlayerId,
-              playfields: objectMap(theGame.data.playfields, maskPlayfield),
-            };
-
-            // notify room
-            io.in(theGame._id.toString()).emit("patch", {
-              data: publicData,
-              phase: "MAIN",
-            });
-
+          if (visibleAmount != 2) {
+            isDone = false;
             break;
           }
+        }
+
+        // run if INITIALREVEAL is done
+        if (isDone) {
+          // change phase
+          theGame.phase = "DRAW";
+          await theGame.save();
 
           // construct public data
           const publicData = {
@@ -344,11 +333,259 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           // notify room
           io.in(theGame._id.toString()).emit("patch", {
             data: publicData,
+            phase: theGame.phase,
           });
-          break;
-        
-        default:
-          break;
+
+          return;
+        }
+
+        // construct public data
+        const publicData = {
+          currentPlayerId: theGame.data.currentPlayerId,
+          playfields: objectMap(theGame.data.playfields, maskPlayfield),
+        };
+
+        // notify room
+        io.in(theGame._id.toString()).emit("patch", {
+          data: publicData,
+        });
+      }
+      // handle DECIDE phase
+      else if (theGame.phase == "DECIDE") {
+        // replace card
+        theGame.data.lastcard =
+          theGame.data.playfields[socket.id][column][row].value;
+        theGame.data.playfields[socket.id][column][row].isVisible = true;
+        theGame.data.playfields[socket.id][column][row].value =
+          theGame.data.currentCard;
+        theGame.data.currentCard = null;
+        theGame.markModified("data");
+
+        // TODO: check if column can be cleared
+
+        // advance currentPlayerId
+        theGame.data.currentPlayerId = getNextPlayerId(theGame);
+        theGame.markModified("data");
+
+        // check if game is finished
+        const hiddenCount = (
+          theGame.data.playfields[theGame.data.currentPlayerId] as [
+            [{ value: number; isVisible: boolean }]
+          ]
+        )
+          .flat()
+          .map((slot) => !slot.isVisible)
+          .filter(Boolean).length;
+
+        if (hiddenCount == 0) {
+          // change phase
+          theGame.phase = "END";
+
+          await theGame.save();
+
+          // construct public data
+          const publicData = {
+            currentCard: theGame.data.currentCard,
+            lastcard: theGame.data.lastcard,
+            currentPlayerId: theGame.data.currentPlayerId,
+            playfields: objectMap(theGame.data.playfields, maskPlayfield),
+          };
+
+          // notify room
+          io.in(theGame._id.toString()).emit("patch", {
+            data: publicData,
+            phase: theGame.phase,
+          });
+
+          return;
+        }
+
+        // change phase
+        theGame.phase = "DRAW";
+
+        await theGame.save();
+
+        // construct public data
+        const publicData = {
+          currentCard: theGame.data.currentCard,
+          lastcard: theGame.data.lastcard,
+          currentPlayerId: theGame.data.currentPlayerId,
+          playfields: objectMap(theGame.data.playfields, maskPlayfield),
+        };
+
+        // notify room
+        io.in(theGame._id.toString()).emit("patch", {
+          data: publicData,
+          phase: theGame.phase,
+        });
+      }
+      // handle REVEAL phase
+      else if (theGame.phase == "REVEAL") {
+        // return early if selected card is already visible
+        if (theGame.data.playfields[socket.id][column][row].isVisible) return;
+
+        // reveal card
+        theGame.data.playfields[socket.id][column][row].isVisible = true;
+        theGame.markModified("data");
+
+        // TODO: check if column can be cleared
+
+        // advance currentPlayerId
+        theGame.data.currentPlayerId = getNextPlayerId(theGame);
+        theGame.markModified("data");
+
+        // check if game is finished
+        const hiddenCount = (
+          theGame.data.playfields[theGame.data.currentPlayerId] as [
+            [{ value: number; isVisible: boolean }]
+          ]
+        )
+          .flat()
+          .map((slot) => !slot.isVisible)
+          .filter(Boolean).length;
+
+        if (hiddenCount == 0) {
+          // change phase
+          theGame.phase = "END";
+
+          await theGame.save();
+
+          // construct public data
+          const publicData = {
+            currentCard: theGame.data.currentCard,
+            lastcard: theGame.data.lastcard,
+            currentPlayerId: theGame.data.currentPlayerId,
+            playfields: objectMap(theGame.data.playfields, maskPlayfield),
+          };
+
+          // notify room
+          io.in(theGame._id.toString()).emit("patch", {
+            data: publicData,
+            phase: theGame.phase,
+          });
+
+          return;
+        }
+
+        // change phase
+        theGame.phase = "DRAW";
+
+        await theGame.save();
+
+        // construct public data
+        const publicData = {
+          currentCard: theGame.data.currentCard,
+          lastcard: theGame.data.lastcard,
+          currentPlayerId: theGame.data.currentPlayerId,
+          playfields: objectMap(theGame.data.playfields, maskPlayfield),
+        };
+
+        // notify room
+        io.in(theGame._id.toString()).emit("patch", {
+          data: publicData,
+          phase: theGame.phase,
+        });
+      }
+    });
+
+    // draw selected handler
+    socket.on("draw_selected", async () => {
+      // return early if player isn"t in a game
+      if (!socket.data.gameId) return;
+
+      // return early if the game can't be found
+      let theGame = await game.findById(socket.data.gameId);
+      if (!theGame) return;
+
+      // return early if the phase isn't DRAW
+      if (theGame.phase != "DRAW") return;
+
+      // return early is it isn't the player's turn
+      if (theGame.data.currentPlayerId != socket.id) return;
+
+      // draw card from stack
+      theGame.data.currentCard = theGame.data.stack.pop();
+      theGame.markModified("data");
+
+      // change phase
+      theGame.phase = "DECIDE";
+
+      await theGame.save();
+
+      // construct public data
+      const publicData = {
+        currentCard: theGame.data.currentCard,
+      };
+
+      // notify room
+      io.in(theGame._id.toString()).emit("patch", {
+        data: publicData,
+        phase: theGame.phase,
+      });
+    });
+
+    // discard selected handler
+    socket.on("discard_selected", async () => {
+      // return early if player isn"t in a game
+      if (!socket.data.gameId) return;
+
+      // return early if the game can't be found
+      let theGame = await game.findById(socket.data.gameId);
+      if (!theGame) return;
+
+      // return early if it isn't the player's turn
+      if (theGame.data.currentPlayerId != socket.id) return;
+
+      // handle DRAW phase
+      if (theGame.phase == "DRAW") {
+        // return early if there is no lastcard
+        if (theGame.data.lastcard == null) return;
+
+        // draw card from stack
+        theGame.data.currentCard = theGame.data.lastcard;
+        theGame.data.lastcard = null;
+        theGame.markModified("data");
+
+        // change phase
+        theGame.phase = "DECIDE";
+
+        await theGame.save();
+
+        // construct public data
+        const publicData = {
+          currentCard: theGame.data.currentCard,
+          lastcard: theGame.data.lastcard,
+        };
+
+        // notify room
+        io.in(theGame._id.toString()).emit("patch", {
+          data: publicData,
+          phase: theGame.phase,
+        });
+      }
+      // handle DECIDE phase
+      else if (theGame.phase == "DECIDE") {
+        // discard card
+        theGame.data.lastcard = theGame.data.currentCard;
+        theGame.data.currentCard = null;
+        theGame.markModified("data");
+
+        // change phase
+        theGame.phase = "REVEAL";
+
+        await theGame.save();
+
+        // construct public data
+        const publicData = {
+          currentCard: theGame.data.currentCard,
+          lastcard: theGame.data.lastcard,
+        };
+
+        // notify room
+        io.in(theGame._id.toString()).emit("patch", {
+          data: publicData,
+          phase: theGame.phase,
+        });
       }
     });
   });

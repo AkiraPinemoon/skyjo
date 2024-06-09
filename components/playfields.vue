@@ -24,6 +24,7 @@ const socket = useSocket();
 const data = computed(() => {
     if (!game.value) return;
     if (!game.value.data) return;
+    if (!game.value.data.playfields) return;
 
     return [game.value.owner].concat(game.value.players).map((player) => {
         return {
