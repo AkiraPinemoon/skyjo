@@ -7,11 +7,6 @@ export default defineNuxtConfig({
       enabled: true,
     },
   },
-
-  runtimeConfig: {
-    mongoUrl: "mongodb://admin:admin@db:27017",
-  },
-
   nitro: {
     experimental: {
       websocket: true,
