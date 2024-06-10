@@ -24,8 +24,8 @@
         </div>
 
         <div v-else class="p-4 w-full h-full grow flex flex-col">
-            <div class="h-full w-full grow flex portrait:flex-col place-items-center justify-center gap-10 p-4 bg-green-500">
-                <Playfields @card_selected="selectCard" class="w-2/3 max-w-3xl portrait:w-full portrait:h-3/4 bg-red-500" />
+            <div class="h-full w-full grow flex portrait:flex-col place-items-center justify-center gap-10 p-4">
+                <Playfields @card_selected="selectCard" class="w-2/3 max-w-3xl portrait:w-full portrait:h-3/4" />
 
                 <div class="flex flex-col justify-center gap-10 w-1/3 max-w-md portrait:max-w-none portrait:flex-row portrait:w-full portrait:h-1/4">
                     <Scoreboard />
