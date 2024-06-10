@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 flex flex-col place-items-center justify-center">
+    <div class="h-full w-full p-4 flex flex-col place-items-center justify-center overflow-clip">
         <PhaseIndicator class="w-2/3 max-w-4xl" />
 
         <div v-if="game?.phase == 'SETUP'" class="p-4 flex flex-col place-items-center justify-center w-2/3  max-w-xl">
@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <div v-else class="p-4">
+        <div v-else class="p-4 w-full h-full grow bg-red-500">
             <div class="flex place-items-center justify-center gap-10 max-w-full p-4 portrait:flex-col">
                 <Playfields @card_selected="selectCard" class="w-2/3 max-w-3xl portrait:w-full portrait:h-3/4" />
 
@@ -37,8 +37,8 @@
                 </div>
             </div>
 
-            <div class="absolute -bottom-11 left-10 transition-all" :class="game?.data?.currentCard != null ? '' : 'translate-y-full'">
-                <GameCard :card-value="game?.data?.currentCard != null ? game?.data?.currentCard : undefined" :facing-up="true" />
+            <div class="relative">
+                <GameCard :card-value="game?.data?.currentCard != null ? game?.data?.currentCard : undefined" :facing-up="true" class="absolute bottom-0 left-10 transition-all translate-y-1/2" :class="game?.data?.currentCard != null ? '' : 'translate-y-[150%]'" />
             </div>
         </div>
     </div>

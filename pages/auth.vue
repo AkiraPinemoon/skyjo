@@ -1,5 +1,5 @@
 <template>
-    <div class="h-screen w-full flex place-content-center place-items-center">
+    <div class="h-full w-full flex place-content-center place-items-center">
         <div v-if="isConnected"
             class="w-64 h-34 p-4 flex flex-col gap-3 place-content-center border border-slate-800 rounded">
             <button @click="logout"
