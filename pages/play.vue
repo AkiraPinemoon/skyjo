@@ -23,8 +23,8 @@
             </div>
         </div>
 
-        <div v-else class="p-4 w-full h-full grow bg-red-500">
-            <div class="flex place-items-center justify-center gap-10 max-w-full p-4 portrait:flex-col">
+        <div v-else class="p-4 w-full h-full grow flex flex-col">
+            <div class="h-full grow flex place-items-center justify-center gap-10 max-w-full p-4 portrait:flex-col">
                 <Playfields @card_selected="selectCard" class="w-2/3 max-w-3xl portrait:w-full portrait:h-3/4" />
 
                 <div class="flex flex-col gap-10 w-1/3 max-w-md portrait:flex-row portrait:w-full portrait:h-1/4">
@@ -38,7 +38,7 @@
             </div>
 
             <div class="relative">
-                <GameCard :card-value="game?.data?.currentCard != null ? game?.data?.currentCard : undefined" :facing-up="true" class="absolute bottom-0 left-10 transition-all translate-y-1/2" :class="game?.data?.currentCard != null ? '' : 'translate-y-[150%]'" />
+                <GameCard :card-value="game?.data?.currentCard != null ? game?.data?.currentCard : undefined" :facing-up="true" class="absolute bottom-0 left-10 transition-all" :class="game?.data?.currentCard != null ? '' : 'translate-y-[150%]'" />
             </div>
         </div>
     </div>
