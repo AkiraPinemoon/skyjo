@@ -30,7 +30,7 @@
                 <ol class="list-decimal pl-8">
                     <li>
                         <h4 class="uppercase text-lg">Draw a Card:</h4>
-                        <ul class="list-disc pl-8">
+                        <ul class="list-disc pl-4 md:pl-8">
                             <li>
                                 <p>Draw the top card from either the draw pile or the discard pile.</p>
                             </li>
@@ -38,10 +38,10 @@
                     </li>
                     <li>
                         <h4 class="uppercase text-lg">Choose to Replace or Discard:</h4>
-                        <ul class="list-disc pl-8">
+                        <ul class="list-disc pl-4 md:pl-8">
                             <li>
                                 <p>If you drew from the draw pile, you may choose to:</p>
-                                <ul class="list-disc pl-8">
+                                <ul class="list-disc pl-4 md:pl-8">
                                     <li>
                                         <p>Replace one of your 12 cards (face up or face down) with the drawn card.</p>
                                     </li>
@@ -61,7 +61,7 @@
                     </li>
                     <li>
                         <h4 class="uppercase text-lg">End of Turn:</h4>
-                        <ul class="list-disc pl-8">
+                        <ul class="list-disc pl-4 md:pl-8">
                             <li>
                                 <p>If you playfield has any column filled with same value cards, place the entire column
                                     on
