@@ -1,5 +1,5 @@
 <template>
-    <div @click="emit('click')" class="pt-3 pl-3">
+    <div @click="emit('click')" class="mt-3 ml-3">
         <div v-if="!props.isEmpty" class="h-[20svmin] w-[13svmin] perspective-800 group select-none">
             <div class="absolute w-full h-full shadow shadow-black bg-white rounded-[.8cqmin]"></div>
             <div
