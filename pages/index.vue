@@ -1,6 +1,5 @@
 <template>
-  <div class="w-full h-full flex flex-col place-items-center">
-    <div class="h-28"></div>
+  <div class="w-full h-full flex flex-col place-items-center py-28">
     <h1 class="uppercase text-xl">welcome to</h1>
     <h1 class="uppercase text-9xl">skyjo</h1>
     <h1 class="uppercase text-5xl">online</h1>
@@ -18,12 +17,12 @@
     <hr class="w-11/12 border-slate-800" />
 
     <div class="h-28"></div>
-    <p class="p-3 w-2/3 max-w-3xl text-justify">
+    <p class="p-3 w-5/6 max-w-3xl text-justify">
       This site is a online multiplayer implementation of the popular Skyjo cardgame.
       You begin by picking a username. Then you can either join a gameroom or host a new one.
       If you don't know the rules of the game yet, please click the rules button above to see them.
     </p>
-    <p class="p-3 w-2/3 max-w-3xl text-justify">
+    <p class="p-3 w-5/6 max-w-3xl text-justify">
       Skyjo online was programmed by Akira Pinemoon and is open source.
       Click below to see the code on Github.
     </p>

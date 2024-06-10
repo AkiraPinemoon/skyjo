@@ -1,6 +1,6 @@
 <template>
-    <div class="w-full h-full flex flex-col place-items-center">
-        <div class="max-w-3xl p-20 text-justify flex flex-col gap-10">
+    <div class="w-full h-full flex flex-col place-items-center py-16">
+        <div class="max-w-3xl w-5/6 text-justify flex flex-col gap-10">
             <h1 class="uppercase text-3xl w-full text-center">The Rules</h1>
 
             <section class="flex flex-col gap-2">
