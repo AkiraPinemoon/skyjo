@@ -350,6 +350,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         theGame.data.playfields[socket.id] = theGame.data.playfields[
           socket.id
         ].filter((column: { value: number; isVisible: boolean }[]) => {
+          if (!column[0].isVisible || !column[1].isVisible || !column[2].isVisible) return true;
           const val = column[0].value;
           if (column[1].value != val) return true;
           if (column[2].value != val) return true;
@@ -429,6 +430,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         theGame.data.playfields[socket.id] = theGame.data.playfields[
           socket.id
         ].filter((column: { value: number; isVisible: boolean }[]) => {
+          if (!column[0].isVisible || !column[1].isVisible || !column[2].isVisible) return true;
           const val = column[0].value;
           if (column[1].value != val) return true;
           if (column[2].value != val) return true;
