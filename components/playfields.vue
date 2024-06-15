@@ -47,4 +47,13 @@ watch(game, (x) => {
     }, 1000);
 });
 
+function select(playerId: string) {
+    const idx = data.value?.findIndex((item) => item.player.socketId == playerId);
+    carousel.value.select(idx ? idx + 1 : 1);
+}
+
+defineExpose({
+    select,
+})
+
 </script>
