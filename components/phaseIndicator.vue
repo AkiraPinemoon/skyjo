@@ -1,5 +1,5 @@
 <template>
-    <UProgress :value="phaseId" :max="['SETUP', 'INITIALREVEAL', 'DRAW', 'DECIDE', 'REPLACE', 'REVEAL', 'END']" />
+    <UProgress :value="phaseId" :max="['Wait for host to press start', 'Click on a face-down card to reveal it', 'Draw from draw or discard pile by selecting it', 'Click on dicard pile to discar the card or a playfield card to replace it', 'Click on a playfield card to replace it', 'Select a face-down playfield card to reveal it', 'Game ended']" />
 </template>
 
 <script lang="ts" setup>
