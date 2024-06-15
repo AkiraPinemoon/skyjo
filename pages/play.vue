@@ -1,7 +1,5 @@
 <template>
     <div class="h-full w-full p-4 flex flex-col place-items-center justify-center overflow-clip">
-        <PhaseIndicator class="w-2/3 max-w-4xl" />
-
         <div v-if="game?.phase == 'SETUP'" class="p-4 flex flex-col place-items-center justify-center w-2/3  max-w-xl">
             <div class="min-h-96 w-full flex flex-col gap-2 p-2 border border-slate-800 rounded-lg">
                 <div class="border border-slate-800 rounded-full h-16 w-full flex place-items-center gap-4 pr-5">
@@ -23,7 +21,14 @@
             </div>
         </div>
 
-        <div v-else class="p-4 w-full h-full grow flex flex-col">
+        <div v-else-if="game?.phase == 'END'" class="p-4 flex flex-col place-items-center justify-center w-2/3  max-w-xl">
+            <h1 v-if="getWinnerId() == socket?.id" class="text-3xl">You won!</h1>
+            <h1 v-else class="text-3xl">You lost.</h1>
+            <Scoreboard />
+        </div>
+
+        <div v-else class="p-4 w-full h-full grow flex flex-col place-items-center">
+            <PhaseIndicator class="w-2/3 max-w-4xl" />
             <div class="h-full w-full grow flex portrait:flex-col place-items-center justify-center gap-10 p-4">
                 <Playfields @card_selected="selectCard" class="w-2/3 max-w-3xl portrait:w-full portrait:h-3/4" />
 
@@ -73,6 +78,28 @@ function selectDraw() {
 // runs when player clicks discardpile
 function selectDiscard() {
     socket.value?.emit("discard_selected");
+}
+
+// returns winners id
+function getWinnerId() {
+    if (!game.value) return;
+    if (!game.value.data) return;
+
+    const unsorted = [game.value.owner].concat(game.value.players).map((player) => {
+        const playfield = game.value?.data?.playfields[player.socketId as keyof typeof game.value.data.playfields] as unknown as { value: number; isVisible: boolean }[][];
+
+        const points = playfield
+            .flat()
+            .map((slot) => slot.isVisible ? slot.value : 0)
+            .reduce((a, b) => a + b, 0);
+
+        return {
+            ...player,
+            points,
+        }
+    });
+
+    return unsorted.sort((a, b) => a.points - b.points)[0].socketId;
 }
 
 </script>
