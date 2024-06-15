@@ -229,11 +229,14 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         ];
       }
 
+      // flip card onto discard pile
+      const lastcard = stack.pop();
+
       // initialize data
       theGame.data = {
         stack,
         playfields,
-        lastcard: null,
+        lastcard,
         currentPlayerId: theGame.owner.socketId,
       };
 
