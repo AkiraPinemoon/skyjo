@@ -21,29 +21,39 @@
             </div>
         </div>
 
-        <div v-else-if="game?.phase == 'END'" class="p-4 flex flex-col place-items-center justify-center w-2/3  max-w-xl">
-            <h1 v-if="getWinnerId() == socket?.id" class="text-3xl">You won!</h1>
-            <h1 v-else class="text-3xl">You lost.</h1>
-            <Scoreboard />
+        <div v-else-if="game?.phase == 'END'"
+            class="p-4 w-full h-full grow flex flex-col place-items-center justify-center">
+            <div
+                class="flex flex-col justify-center place-items-center gap-10 w-1/3 max-w-md portrait:max-w-none portrait:w-full portrait:h-1/4">
+                <h1 v-if="getWinnerId() == socket?.id" class="text-3xl">You won!</h1>
+                <h1 v-else class="text-3xl">You lost.</h1>
+                <Scoreboard />
+            </div>
         </div>
 
         <div v-else class="p-4 w-full h-full grow flex flex-col place-items-center">
             <PhaseIndicator class="w-2/3 max-w-4xl" />
             <div class="h-full w-full grow flex portrait:flex-col place-items-center justify-center gap-10 p-4">
-                <Playfields @card_selected="selectCard" ref="playfields" class="w-2/3 max-w-3xl portrait:w-full portrait:h-3/4" />
+                <Playfields @card_selected="selectCard" ref="playfields"
+                    class="w-2/3 max-w-3xl portrait:w-full portrait:h-3/4" />
 
-                <div class="flex flex-col justify-center gap-10 w-1/3 max-w-md portrait:max-w-none portrait:flex-row portrait:w-full portrait:h-1/4">
+                <div
+                    class="flex flex-col justify-center gap-10 w-1/3 max-w-md portrait:max-w-none portrait:flex-row portrait:w-full portrait:h-1/4">
                     <Scoreboard @click="showPlayfield" />
                     <div class="flex gap-2 justify-center">
-                        <CardPile @click="selectDraw" :top-card-value="undefined" :facing-up="false" :is-empty="false" />
-                        <CardPile @click="selectDiscard" :top-card-value="game?.data?.lastcard != null ? game?.data?.lastcard : undefined" :facing-up="true"
-                            :is-empty="game?.data?.lastcard == null" />
+                        <CardPile @click="selectDraw" :top-card-value="undefined" :facing-up="false"
+                            :is-empty="false" />
+                        <CardPile @click="selectDiscard"
+                            :top-card-value="game?.data?.lastcard != null ? game?.data?.lastcard : undefined"
+                            :facing-up="true" :is-empty="game?.data?.lastcard == null" />
                     </div>
                 </div>
             </div>
 
             <div class="relative">
-                <GameCard :card-value="game?.data?.currentCard != null ? game?.data?.currentCard : undefined" :facing-up="true" class="absolute bottom-0 left-10 transition-all" :class="game?.data?.currentCard != null ? '' : 'translate-y-[150%]'" />
+                <GameCard :card-value="game?.data?.currentCard != null ? game?.data?.currentCard : undefined"
+                    :facing-up="true" class="absolute bottom-0 left-10 transition-all"
+                    :class="game?.data?.currentCard != null ? '' : 'translate-y-[150%]'" />
             </div>
         </div>
     </div>
