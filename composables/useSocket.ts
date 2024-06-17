@@ -3,7 +3,8 @@ import { Socket } from "socket.io-client";
 export default function () {
   return useState<Socket & {
     auth: {
-      username: string,
+      playerId: string,
+      secret: string,
     },
   } | null>("socket", () => null);
 }

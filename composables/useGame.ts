@@ -2,11 +2,11 @@ export default function () {
   return useState<{
     owner: {
       username: string;
-      socketId: string;
+      id: string;
     };
     players: {
       username: string;
-      socketId: string;
+      id: string;
     }[];
     phase: string;
     data: {

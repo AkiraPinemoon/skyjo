@@ -14,7 +14,7 @@
                     <span>{{ player.username }}</span>
                 </div>
                 <div class="grow"></div>
-                <button v-if="game.owner.socketId == socket?.id" @click="socket.emit('start_game')"
+                <button v-if="game.owner.id == player?.playerId" @click="socket?.emit('start_game')"
                     class="uppercase text-md flex place-items-center place-content-center border-4 border-slate-900 shadow shadow-slate-800 bg-lime-600 rounded-full px-6 py-2 transition-all hover:scale-105">
                     Start Game
                 </button>
@@ -25,7 +25,7 @@
             class="p-4 w-full h-full grow flex flex-col place-items-center justify-center">
             <div
                 class="flex flex-col justify-center place-items-center gap-10 w-1/3 max-w-md portrait:max-w-none portrait:w-full portrait:h-1/4">
-                <h1 v-if="getWinnerId() == socket?.id" class="text-3xl">You won!</h1>
+                <h1 v-if="getWinnerId() == player?.playerId" class="text-3xl">You won!</h1>
                 <h1 v-else class="text-3xl">You lost.</h1>
                 <Scoreboard />
             </div>
@@ -61,6 +61,7 @@
 
 <script lang="ts" setup>
 
+const player = usePlayer();
 const game = useGame();
 const socket = useSocket();
 
@@ -96,7 +97,7 @@ function getWinnerId() {
     if (!game.value.data) return;
 
     const unsorted = [game.value.owner].concat(game.value.players).map((player) => {
-        const playfield = game.value?.data?.playfields[player.socketId as keyof typeof game.value.data.playfields] as unknown as { value: number; isVisible: boolean }[][];
+        const playfield = game.value?.data?.playfields[player.id as keyof typeof game.value.data.playfields] as unknown as { value: number; isVisible: boolean }[][];
 
         const points = playfield
             .flat()
@@ -109,7 +110,7 @@ function getWinnerId() {
         }
     });
 
-    return unsorted.sort((a, b) => a.points - b.points)[0].socketId;
+    return unsorted.sort((a, b) => a.points - b.points)[0].id;
 }
 
 const playfields = ref();

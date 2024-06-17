@@ -14,8 +14,10 @@
 </template>
 
 <script lang="ts" setup>
+import axios from 'axios';
 import { Socket, io } from 'socket.io-client';
 
+const player = usePlayer()
 const socket = useSocket()
 
 const isConnected = ref(false);
@@ -29,18 +31,27 @@ function onDisconnect() {
     isConnected.value = false;
 }
 
-function auth() {
-    socket.value = io({ auth: { "username": username.value } }) as Socket & {
+async function auth() {
+    const newPlayer = await axios.post("/api/player", {
+        username: username.value,
+    }).then(res => res.data);
+
+    player.value = newPlayer;
+
+    socket.value = io({ auth: player.value }) as Socket & {
         auth: {
-            username: string,
+            playerId: string,
+            secret: string,
         }
     };
     socket.value.on("connect", onConnect);
     socket.value.on("disconnect", onDisconnect);
-    navigateTo("/selectGame")
+
+    setTimeout(() => { if (socket.value?.connected) navigateTo("/selectGame") }, 1000);
 }
 
 function logout() {
+    player.value = null;
     socket.value?.disconnect();
     socket.value = null;
 }

@@ -2,7 +2,7 @@ import type { NitroApp } from "nitropack";
 import { Server as Engine } from "engine.io";
 import { Server } from "socket.io";
 import { defineEventHandler } from "h3";
-import { game } from "@/server/dbModels/index";
+import { game, player } from "@/server/dbModels/index";
 import { getNextPlayerId, maskPlayfield, objectMap, revealPlayfield } from "@/server/util";
 
 export default defineNitroPlugin((nitroApp: NitroApp) => {
@@ -12,86 +12,131 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
   io.bind(engine);
 
   // connection handler
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
     console.log("SocketIo connection from " + socket.id);
 
     // handle authentification
-    if (typeof socket.handshake.auth.username !== "string") {
-      console.log("SocketIo auth error from " + socket.id);
+    // validate auth data
+    if (typeof socket.handshake.auth.playerId !== "string"
+      || typeof socket.handshake.auth.secret !== "string") {
+      console.log("SocketIo auth error (validation) from " + socket.id);
       socket.disconnect();
+      return;
     }
 
-    socket.data.gameId = null;
+    // auth
+    const thePlayer = await player.findById(socket.handshake.auth.playerId);
+    if (!thePlayer) {
+      console.log("SocketIo auth error (playerId) from " + socket.id);
+      socket.disconnect();
+      return;
+    }
+    if (thePlayer.secret != socket.handshake.auth.secret) {
+      console.log("SocketIo auth error (secret) from " + socket.id);
+      socket.disconnect();
+      return;
+    }
+
+    socket.data.playerId = thePlayer._id;
 
     // register logging middleware
     socket.use(([event, ...args], next) => {
       console.log("SocketIo event " + event + " from " + socket.id);
-
       next();
     });
 
     // disconnection handler
     socket.on("disconnect", async () => {
       console.log("SocketIo disconnection from " + socket.id);
-      // return early if player isn't in a game
-      if (!socket.data.gameId) return;
 
-      // find game
-      let theGame = await game.findById(socket.data.gameId);
-      if (!theGame) return;
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
 
-      // advance currentPlayerId if it's the players turn
-      if (theGame.phase == "INITIALREVEAL") {
-        if (theGame.data.currentPlayerId == socket.id) {
-          theGame.data.currentPlayerId = getNextPlayerId(theGame);
-          theGame.markModified("data");
-        }
-      }
+      thePlayer.socketId = null;
+      await thePlayer.save();
 
-      // run if the player owns the game
-      if (theGame.owner?.socketId == socket.id.toString()) {
-        // run if there are other players
-        if (theGame.players.length > 0) {
-          // make another user owner
-          theGame.owner = (await theGame.players.pop()) as {
-            username: string;
-            socketId: string;
-          };
-        } else {
-          // delete game if there are no other players
-          await theGame.deleteOne();
+      setTimeout(async () => {
+        const thePlayer = await player.findById(socket.handshake.auth.playerId);
+        // return early if player isn't found
+        if (!thePlayer) return;
+
+        console.log("Testing for deletion " + thePlayer._id.toString());
+
+        // return early if the player has an associated socket
+        if (thePlayer.socketId) return;
+
+        // delete player and return early if player isn't in a game
+        if (!thePlayer.gameId) {
+          await thePlayer.deleteOne();
           return;
         }
-      } else {
-        // if player doesn't own game remove from players
-        theGame.players.pull({ socketId: socket.id });
-      }
 
-      await theGame.save();
-      theGame = await game.findById(socket.data.gameId);
-      if (!theGame) return;
+        // find game
+        let theGame = await game.findById(thePlayer.gameId);
+        if (!theGame) return;
 
-      // notify room
-      socket.broadcast.in(theGame._id.toString()).emit("patch", {
-        players: theGame.players,
-        owner: theGame.owner,
-        data: {
-          currentPlayerId: theGame.data.currentPlayerId,
-          playfields: objectMap(theGame.data.playfields, maskPlayfield),
-        },
-      });
+        // advance currentPlayerId if it's the players turn
+        if (theGame.phase == "INITIALREVEAL") {
+          if (theGame.data.currentPlayerId == thePlayer._id) {
+            theGame.data.currentPlayerId = getNextPlayerId(theGame);
+            theGame.markModified("data");
+          }
+        }
+
+        // run if the player owns the game
+        if (theGame.owner.id == thePlayer._id.toString()) {
+          // run if there are other players
+          if (theGame.players.length > 0) {
+            // make another user owner
+            theGame.owner = (await theGame.players.pop()) as {
+              id: string;
+              username: string;
+            };
+          } else {
+            // delete game if there are no other players
+            await theGame.deleteOne();
+            await thePlayer.deleteOne();
+            return;
+          }
+        } else {
+          // if player doesn't own game remove from players
+          theGame.players.pull({ id: thePlayer._id.toString() });
+          await thePlayer.deleteOne();
+        }
+
+        await theGame.save();
+        theGame = await game.findById(thePlayer.gameId);
+        if (!theGame) return;
+
+        // notify room
+        socket.broadcast.in(theGame._id.toString()).emit("patch", {
+          players: theGame.players,
+          owner: theGame.owner,
+          data: {
+            currentPlayerId: theGame.data.currentPlayerId,
+            playfields: theGame.phase != "SETUP" ? objectMap(theGame.data.playfields, maskPlayfield) : undefined,
+          },
+        });
+
+        console.log("Player deleted " + thePlayer._id.toString());
+      }, 10000);
     });
 
     // host game handler
     socket.on("host_game", async () => {
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
+
       // return early if player is already in a game
-      if (socket.data.gameId) return;
+      if (thePlayer.gameId) return;
 
       // create new game
       let newGame = await game.create({
         owner: {
-          username: socket.handshake.auth.username,
-          socketId: socket.id,
+          username: thePlayer.username,
+          id: thePlayer._id,
         },
       });
 
@@ -107,13 +152,18 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       });
 
       // store gameId in socket
-      socket.data.gameId = newGame._id.toString();
+      thePlayer.gameId = newGame._id.toString();
+      await thePlayer.save();
     });
 
     // join game handler
     socket.on("join_game", async (gameId: string) => {
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
+
       // return early if player is already in a game
-      if (socket.data.gameId) return;
+      if (thePlayer.gameId) return;
 
       // return early if game doesn't exist
       let theGame = await game.findById(gameId);
@@ -121,8 +171,8 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
 
       // add player to players
       theGame.players.push({
-        username: socket.handshake.auth.username,
-        socketId: socket.id,
+        username: thePlayer.username,
+        id: thePlayer._id,
       });
       await theGame.save();
 
@@ -141,18 +191,23 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       socket.broadcast.in(gameId).emit("patch", { players: theGame.players });
 
       // store gameId in socket
-      socket.data.gameId = gameId;
+      thePlayer.gameId = gameId;
+      await thePlayer.save();
     });
 
     // start game handler
     socket.on("start_game", async () => {
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
+
       // return early if player isn"t in a game
-      if (!socket.data.gameId) return;
+      if (!thePlayer.gameId) return;
 
       // return early if the game can't be found or isn't owned by player
-      let theGame = await game.findById(socket.data.gameId);
+      let theGame = await game.findById(thePlayer.gameId);
       if (!theGame) return;
-      if (theGame.owner?.socketId != socket.id) return;
+      if (theGame.owner?.id != thePlayer._id.toString()) return;
 
       // create stack
       let stack: number[] = [];
@@ -181,7 +236,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       // deal cards
       let playfields: any = {};
 
-      playfields[theGame.owner.socketId] = [
+      playfields[theGame.owner.id] = [
         [
           { value: stack.pop(), isVisible: false },
           { value: stack.pop(), isVisible: false },
@@ -205,7 +260,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       ];
 
       for (const player of theGame.players) {
-        playfields[player.socketId] = [
+        playfields[player.id] = [
           [
             { value: stack.pop(), isVisible: false },
             { value: stack.pop(), isVisible: false },
@@ -237,7 +292,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         stack,
         playfields,
         lastcard,
-        currentPlayerId: theGame.owner.socketId,
+        currentPlayerId: thePlayer._id,
       };
 
       // set phase
@@ -262,22 +317,26 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
 
     // card selected handler
     socket.on("card_selected", async (column, row) => {
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
+
       // return early if player isn"t in a game
-      if (!socket.data.gameId) return;
+      if (!thePlayer.gameId) return;
 
       // return early if the game can't be found
-      let theGame = await game.findById(socket.data.gameId);
+      let theGame = await game.findById(thePlayer.gameId);
       if (!theGame) return;
 
       // return early is it isn't the player's turn
-      if (theGame.data.currentPlayerId != socket.id) return;
+      if (theGame.data.currentPlayerId != thePlayer._id.toString()) return;
 
       // handle INITIALREVEAL phase
       if (theGame.phase == "INITIALREVEAL") {
         // return early if selected card is already visible
-        if (theGame.data.playfields[socket.id][column][row].isVisible) return;
+        if (theGame.data.playfields[thePlayer._id.toString()][column][row].isVisible) return;
 
-        theGame.data.playfields[socket.id][column][row].isVisible = true;
+        theGame.data.playfields[thePlayer._id.toString()][column][row].isVisible = true;
         theGame.data.currentPlayerId = getNextPlayerId(theGame);
         theGame.markModified("data");
         await theGame.save();
@@ -288,11 +347,11 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         for (const player of (
           theGame.players as {
             username: string;
-            socketId: string;
+            id: string;
           }[]
         ).concat(theGame.owner)) {
           const visibleAmount = (
-            theGame.data.playfields[player.socketId] as [
+            theGame.data.playfields[player.id] as [
               [{ value: number; isVisible: boolean }]
             ]
           )
@@ -342,16 +401,16 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       else if (theGame.phase == "DECIDE" || theGame.phase == "REPLACE") {
         // replace card
         theGame.data.lastcard =
-          theGame.data.playfields[socket.id][column][row].value;
-        theGame.data.playfields[socket.id][column][row].isVisible = true;
-        theGame.data.playfields[socket.id][column][row].value =
+          theGame.data.playfields[thePlayer._id.toString()][column][row].value;
+        theGame.data.playfields[thePlayer._id.toString()][column][row].isVisible = true;
+        theGame.data.playfields[thePlayer._id.toString()][column][row].value =
           theGame.data.currentCard;
         theGame.data.currentCard = null;
         theGame.markModified("data");
 
         // check if column can be cleared
-        theGame.data.playfields[socket.id] = theGame.data.playfields[
-          socket.id
+        theGame.data.playfields[thePlayer._id.toString()] = theGame.data.playfields[
+          thePlayer._id.toString()
         ].filter((column: { value: number; isVisible: boolean }[]) => {
           if (!column[0].isVisible || !column[1].isVisible || !column[2].isVisible) return true;
           const val = column[0].value;
@@ -423,15 +482,15 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       // handle REVEAL phase
       else if (theGame.phase == "REVEAL") {
         // return early if selected card is already visible
-        if (theGame.data.playfields[socket.id][column][row].isVisible) return;
+        if (theGame.data.playfields[thePlayer._id.toString()][column][row].isVisible) return;
 
         // reveal card
-        theGame.data.playfields[socket.id][column][row].isVisible = true;
+        theGame.data.playfields[thePlayer._id.toString()][column][row].isVisible = true;
         theGame.markModified("data");
 
         // TODO: check if column can be cleared
-        theGame.data.playfields[socket.id] = theGame.data.playfields[
-          socket.id
+        theGame.data.playfields[thePlayer._id.toString()] = theGame.data.playfields[
+          thePlayer._id.toString()
         ].filter((column: { value: number; isVisible: boolean }[]) => {
           if (!column[0].isVisible || !column[1].isVisible || !column[2].isVisible) return true;
           const val = column[0].value;
@@ -504,18 +563,22 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
 
     // draw selected handler
     socket.on("draw_selected", async () => {
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
+
       // return early if player isn"t in a game
-      if (!socket.data.gameId) return;
+      if (!thePlayer.gameId) return;
 
       // return early if the game can't be found
-      let theGame = await game.findById(socket.data.gameId);
+      let theGame = await game.findById(thePlayer.gameId);
       if (!theGame) return;
+
+      // return early if it isn't the player's turn
+      if (theGame.data.currentPlayerId != thePlayer._id.toString()) return;
 
       // return early if the phase isn't DRAW
       if (theGame.phase != "DRAW") return;
-
-      // return early is it isn't the player's turn
-      if (theGame.data.currentPlayerId != socket.id) return;
 
       // draw card from stack
       theGame.data.currentCard = theGame.data.stack.pop();
@@ -540,15 +603,19 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
 
     // discard selected handler
     socket.on("discard_selected", async () => {
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
+
       // return early if player isn"t in a game
-      if (!socket.data.gameId) return;
+      if (!thePlayer.gameId) return;
 
       // return early if the game can't be found
-      let theGame = await game.findById(socket.data.gameId);
+      let theGame = await game.findById(thePlayer.gameId);
       if (!theGame) return;
 
       // return early if it isn't the player's turn
-      if (theGame.data.currentPlayerId != socket.id) return;
+      if (theGame.data.currentPlayerId != thePlayer._id.toString()) return;
 
       // handle DRAW phase
       if (theGame.phase == "DRAW") {

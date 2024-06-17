@@ -1,4 +1,3 @@
-import { player } from "./dbModels";
 
 export function maskPlayfield(
   playfield: { value: number; isVisible: boolean }[][]
@@ -34,17 +33,17 @@ export function objectMap(o: Object, fn: Function): Object {
 }
 
 export function getNextPlayerId(g: {
-  owner: { socketId: string };
-  players: { socketId: string }[];
+  owner: { id: string };
+  players: { id: string }[];
   data: { currentPlayerId: string };
 }): string {
-  if (g.data.currentPlayerId == g.owner.socketId) {
-    if (g.players.length > 0) return g.players[0].socketId;
+  if (g.data.currentPlayerId == g.owner.id) {
+    if (g.players.length > 0) return g.players[0].id;
     return g.data.currentPlayerId;
   } else {
-    const idx = g.players.findIndex((player) => player.socketId == g.data.currentPlayerId)
+    const idx = g.players.findIndex((player) => player.id == g.data.currentPlayerId)
     if (idx == -1) return g.data.currentPlayerId;
-    if (idx + 1 >= g.players.length) return g.owner.socketId;
-    return g.players[idx + 1].socketId;
+    if (idx + 1 >= g.players.length) return g.owner.id;
+    return g.players[idx + 1].id;
   }
 }

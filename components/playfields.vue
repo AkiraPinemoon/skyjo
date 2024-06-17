@@ -11,7 +11,7 @@
                 {{ item.player.username }}
             </div>
             <Playfield :playfield="item.playfield"
-                @card_selected="(column, row) => { if (item.player.socketId == socket?.id) emit('card_selected', column, row) }" />
+                @card_selected="(column, row) => { if (item.player.id == player?.playerId) emit('card_selected', column, row) }" />
         </div>
     </UCarousel>
 </template>
@@ -19,7 +19,7 @@
 <script lang="ts" setup>
 
 const game = useGame();
-const socket = useSocket();
+const player = usePlayer();
 
 const data = computed(() => {
     if (!game.value) return;
@@ -29,7 +29,7 @@ const data = computed(() => {
     return [game.value.owner].concat(game.value.players).map((player) => {
         return {
             player,
-            playfield: game.value?.data?.playfields[player.socketId as keyof typeof game.value.data.playfields],
+            playfield: game.value?.data?.playfields[player.id as keyof typeof game.value.data.playfields],
         }
     });
 });
@@ -42,13 +42,13 @@ const carousel = ref();
 
 watch(game, (x) => {
     setTimeout(() => {
-        const idx = data.value?.findIndex((item) => item.player.socketId == game.value?.data?.currentPlayerId);
+        const idx = data.value?.findIndex((item) => item.player.id == game.value?.data?.currentPlayerId);
         carousel.value.select(idx ? idx + 1 : 1);
     }, 1000);
 });
 
 function select(playerId: string) {
-    const idx = data.value?.findIndex((item) => item.player.socketId == playerId);
+    const idx = data.value?.findIndex((item) => item.player.id == playerId);
     carousel.value.select(idx ? idx + 1 : 1);
 }
 
