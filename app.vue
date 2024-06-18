@@ -11,11 +11,13 @@
         </svg>
       </NuxtLink>
 
-      <NuxtLink to="/auth" class="absolute right-2 top-0 text-lg font-normal px-2 h-full flex place-items-center">
-        {{ socket ? 'Hello ' + socket.auth.username : "login" }}
-      </NuxtLink>
+      <button @click="auth.isOpen = true"
+        class="absolute right-2 top-0 text-lg font-normal px-2 h-full flex place-items-center">
+        {{ player ? 'Hello ' + player.username : "login" }}
+      </button>
     </header>
 
+    <Auth />
 
     <NuxtPage class="grow max-w-full" />
   </div>
@@ -23,6 +25,7 @@
 
 <script lang="ts" setup>
 
-const socket = useSocket();
+const auth = useAuth();
+const player = usePlayer();
 
 </script>

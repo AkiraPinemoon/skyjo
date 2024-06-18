@@ -37,7 +37,9 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       return;
     }
 
-    socket.data.playerId = thePlayer._id;
+    thePlayer.socketId = socket.id;
+    await thePlayer.save();
+    console.log("SocketIo auth from " + socket.id + " as " + thePlayer._id.toString());
 
     // register logging middleware
     socket.use(([event, ...args], next) => {
@@ -64,7 +66,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         console.log("Testing for deletion " + thePlayer._id.toString());
 
         // return early if the player has an associated socket
-        if (thePlayer.socketId) return;
+        if (thePlayer.socketId != null) return;
 
         // delete player and return early if player isn't in a game
         if (!thePlayer.gameId) {

@@ -28,6 +28,9 @@
                 <h1 v-if="getWinnerId() == player?.playerId" class="text-3xl">You won!</h1>
                 <h1 v-else class="text-3xl">You lost.</h1>
                 <Scoreboard />
+                <button @click="playAgain"
+                    class="uppercase text-md flex place-items-center place-content-center border-4 border-slate-900 shadow shadow-slate-800 bg-lime-600 rounded-full px-6 py-2 transition-all hover:scale-105">
+                    Play again</button>
             </div>
         </div>
 
@@ -60,6 +63,9 @@
 </template>
 
 <script lang="ts" setup>
+import axios from 'axios';
+import { Socket, io } from 'socket.io-client';
+
 
 const player = usePlayer();
 const game = useGame();
@@ -117,6 +123,28 @@ const playfields = ref();
 
 function showPlayfield(playerId: string) {
     playfields.value.select(playerId);
+}
+
+async function playAgain() {
+    const username = player.value?.username;
+    player.value = null;
+    socket.value?.disconnect();
+    socket.value = null;
+
+    const newPlayer = await axios.post("/api/player", {
+        username,
+    }).then(res => res.data);
+
+    player.value = newPlayer;
+
+    socket.value = io({ auth: player.value! }) as Socket & {
+        auth: {
+            playerId: string,
+            secret: string,
+        }
+    };
+
+    navigateTo("/selectGame")
 }
 
 </script>
