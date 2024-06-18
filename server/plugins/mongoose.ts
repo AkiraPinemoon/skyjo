@@ -1,6 +1,8 @@
 import type { NitroApp } from "nitropack";
 import mongoose from "mongoose";
 
+import { game, player } from "@/server/dbModels/index";
+
 export default defineNitroPlugin(async (nitroApp: NitroApp) => {
   const mongoUrl = process.env.MONGO_URL || "mongodb://admin:admin@localhost:27017";
 

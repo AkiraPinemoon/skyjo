@@ -122,7 +122,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         });
 
         console.log("Player deleted " + thePlayer._id.toString());
-      }, 10000);
+      }, 5000);
     });
 
     // host game handler
