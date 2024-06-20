@@ -39,6 +39,10 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
 
     thePlayer.socketId = socket.id;
     await thePlayer.save();
+
+    if (thePlayer.gameId) {
+      socket.join(thePlayer.gameId.toString());
+    }
     console.log("SocketIo auth from " + socket.id + " as " + thePlayer._id.toString());
 
     // register logging middleware
@@ -670,6 +674,37 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
           phase: theGame.phase,
         });
       }
+    });
+
+    // refetch handler
+    socket.on("refetch", async () => {
+      const thePlayer = await player.findById(socket.handshake.auth.playerId);
+      // return early if player isn't found
+      if (!thePlayer) return;
+
+      // return early if player isn"t in a game
+      if (!thePlayer.gameId) return;
+
+      // return early if the game can't be found
+      let theGame = await game.findById(thePlayer.gameId);
+      if (!theGame) return;
+
+      // construct public data
+      const publicData = {
+        lastcard: theGame.data.lastcard,
+        currentPlayerId: theGame.data.currentPlayerId,
+        currentCard: theGame.data.currentCard,
+        playfields: theGame.data.playfields,
+      };
+
+      // notify room
+      socket.emit("patch", {
+        data: publicData,
+        phase: theGame.phase,
+        players: theGame.players,
+        owner: theGame.owner,
+        id: theGame._id,
+      });
     });
   });
 

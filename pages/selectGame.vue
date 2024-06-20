@@ -24,6 +24,8 @@
 </template>
 
 <script lang="ts" setup>
+import axios from 'axios';
+
 
 const { data, refresh } = useFetch<{
     owner: {
@@ -33,6 +35,9 @@ const { data, refresh } = useFetch<{
     playercount: number,
     id: string,
 }[]>("/api/games");
+
+const player = usePlayer();
+const socket = useSocket();
 
 function join(gameId: string) {
     useSocket().value?.emit("join_game", gameId);
@@ -46,5 +51,19 @@ useSocket().value?.once("game_joined", (game) => {
     useGame().value = game;
     navigateTo("/play");
 })
+
+onBeforeMount(async () => {
+    // check if socket is open
+    if (useSocket().value == null) {
+        useAuth().value.isOpen = true;
+        navigateTo("/");
+    } else {
+        // check if player is in game
+        const res = await axios.get("/api/player/" + player.value?.playerId).then(res => res.data);
+        if (res.state == "INGAME") {
+            navigateTo("/play");
+        }
+    }
+});
 
 </script>

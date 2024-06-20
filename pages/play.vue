@@ -71,7 +71,7 @@ const player = usePlayer();
 const game = useGame();
 const socket = useSocket();
 
-socket.value?.on("patch", (patch) => {
+function patch(patch: any) {
     game.value = {
         ...game.value,
         ...patch,
@@ -80,7 +80,9 @@ socket.value?.on("patch", (patch) => {
             ...patch.data,
         },
     }
-});
+}
+
+socket.value?.on("patch", patch);
 
 // runs when player clicks one of his playfield cards
 function selectCard(column: number, row: number) {
@@ -146,5 +148,21 @@ async function playAgain() {
 
     navigateTo("/selectGame")
 }
+
+onBeforeMount(async () => {
+    // check if socket is open
+    if (useSocket().value == null) {
+        useAuth().value.isOpen = true;
+        navigateTo("/");
+    } else {
+        // check if player is in game
+        const res = await axios.get("/api/player/" + player.value?.playerId).then(res => res.data);
+        if (res.state == "INGAME") {
+            socket.value?.emit("refetch");
+        } else {
+            navigateTo("/selectGame")
+        }
+    }
+});
 
 </script>
