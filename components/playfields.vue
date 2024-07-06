@@ -40,8 +40,11 @@ const emit = defineEmits<{
 
 const carousel = ref();
 
+let patchTimeout: any = null;
+
 watch(game, (x) => {
-    setTimeout(() => {
+    clearTimeout(patchTimeout);
+    patchTimeout = setTimeout(() => {
         const idx = data.value?.findIndex((item) => item.player.id == game.value?.data?.currentPlayerId);
         carousel.value.select(idx ? idx + 1 : 1);
     }, 1000);
