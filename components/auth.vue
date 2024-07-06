@@ -37,6 +37,9 @@ async function login() {
       secret: string,
     }
   };
+
+  navigateTo("/selectGame")
+  auth.value.isOpen = false;
 }
 
 function logout() {
